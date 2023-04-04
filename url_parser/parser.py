@@ -46,5 +46,7 @@ class UrlParser:
         if len(full_urls) > 0:
             for url in full_urls:
                 site = urllib.parse.urlparse(url).netloc
+                if 'http' not in site:
+                    site = 'https://' + site
                 sites.append(site)
         return sites
