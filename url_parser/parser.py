@@ -2,6 +2,7 @@ from urlextract import URLExtract
 import requests
 import urllib
 import warnings
+import re
 
 class UrlParser:
     shorteners = ['bit.ly', 'cutt.ly', 'inf.im', 't1p.de', 'tinyurl.com', 'tiny.one', 'goo.gl']
@@ -10,17 +11,16 @@ class UrlParser:
         self.extractor = URLExtract()
         self.session = requests.Session()
 
-    def extract_urls(self, text: str, resolve_shortened: bool = False) -> list[str]:
+    def extract_urls(self, text: str, resolve_shortened: bool = False, protocol: bool = False) -> list[str]:
         """Extract urls from text body, optionally resolve shortened urls
         :param text: text to extract urls from
         :param resolve_shortened: if True, resolves shortened urls
+        :param protocol: if False, discards http, https and www prefixes from url strings
         :returns: a list of urls
         """
         urls = self.extractor.find_urls(text)
         processed_urls = []
         for url in urls:
-            if 'http' not in url:
-                url = 'https://' + url
             if resolve_shortened:
                 for sh in self.shorteners:
                     if sh in url:
@@ -30,6 +30,12 @@ class UrlParser:
                         except:
                             warnings.warn(f'Could not resolve shortened URL {url}')
                         break
+            if protocol:
+                if 'http' not in url:
+                    url = 'https://' + url
+            else:
+                url = re.sub(r'^https*:/{2}', '', url)
+                url = re.sub(r'^www\.', '', url)
             processed_urls.append(url)
         return processed_urls
 
